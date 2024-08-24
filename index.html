@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Management Game</title>
+    <style>
+        body {
+            background-color: #282c34;
+            color: #ffffff;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        #menu-container, #game-container, #load-game-container {
+            background-color: #3c3f47;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+            width: 350px;
+            text-align: center;
+            display: none;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #4caf50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #status p {
+            margin: 10px 0;
+        }
+
+        #actions {
+            margin: 20px 0;
+        }
+
+        #bank-hack {
+            margin-top: 20px;
+        }
+
+        #numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        #numpad button {
+            background-color: #555555;
+            border: none;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+
+        #numpad button:hover {
+            background-color: #666666;
+        }
+
+        #current-input {
+            font-size: 20px;
+            margin: 10px 0;
+        }
+
+        #messages {
+            display: none;
+        }
+
+        #menu-bar {
+            display: flex;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        #menu-bar button {
+            background-color: #555555;
+            border: none;
+            color: white;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #menu-bar button:hover {
+            background-color: #666666;
+        }
+
+        #upgrade-details {
+            margin-top: 20px;
+        }
+
+        .upgrade-details {
+            display: none;
+            background-color: #444444;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+        }
+
+        #active-upgrades {
+            margin-top: 20px;
+            background-color: #444444;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body onload="showMenu()">
+    <!-- Main Menu -->
+    <div id="menu-container">
+        <h1>Main Menu</h1>
+        <button onclick="startGame()">Start Game</button>
+        <button onclick="showLoadGameMenu()">Load Game</button>
+        <button onclick="showInstructions()">Instructions</button>
+    </div>
+
+    <!-- Load Game Menu -->
+    <div id="load-game-container">
+        <h1>Load Game</h1>
+        <div id="save-slots"></div>
+        <button onclick="goBackToMenu()">Back to Menu</button>
+    </div>
+
+    <!-- Game Container -->
+    <div id="game-container">
+        <h1>Server Management Game</h1>
+        <div id="status">
+            <p>Balance: $<span id="balance">0</span></p>
+            <p>Server Racks: <span id="server-racks">0</span></p>
+            <p>Ethernet Cables: <span id="ethernet-cables">0</span></p>
+            <p>Server Upgrade Level: <span id="server-upgrade-level">1</span></p>
+            <p>Network Upgrade Level: <span id="network-upgrade-level">0</span></p>
+        </div>
+
+        <!-- Menu Bar -->
+        <div id="menu-bar">
+            <button onclick="showUpgradeDetails('serverUpgrade')">Server Upgrade</button>
+            <button onclick="showUpgradeDetails('networkUpgrade')">Network Upgrade</button>
+            <button onclick="showUpgradeDetails('bitcoinMining')">Bitcoin Mining</button>
+            <button onclick="showUpgradeDetails('bankMiners')">Bank Miners</button>
+            <button onclick="showUpgradeDetails('hackBooster')">Hack Booster</button>
+        </div>
+
+        <!-- Upgrade Details -->
+        <div id="upgrade-details">
+            <div id="serverUpgrade-details" class="upgrade-details">Upgrades your server, enabling new features.</div>
+            <div id="networkUpgrade-details" class="upgrade-details">Enhances your network, increasing Bitcoin mining rate.</div>
+            <div id="bitcoinMining-details" class="upgrade-details">Enables Bitcoin mining to earn more money over time.</div>
+            <div id="bankMiners-details" class="upgrade-details">Improves bank hacking efficiency.</div>
+            <div id="hackBooster-details" class="upgrade-details">Boosts hacking success rate temporarily.</div>
+        </div>
+
+        <!-- Active Upgrades -->
+        <div id="active-upgrades">
+            <h2>Active Upgrades:</h2>
+            <ul id="active-upgrades-list"></ul>
+        </div>
+
+        <div id="actions">
+            <button onclick="hackBank()">Hack the Bank</button>
+            <button onclick="buyServerRack()">Buy Server Rack ($<span id="server-rack-cost">500</span>)</button>
+            <button onclick="buyEthernetCable()">Buy Ethernet Cable ($<span id="ethernet-cable-cost">50</span>)</button>
+            <button onclick="upgradeServer()">Upgrade Server ($<span id="server-upgrade-cost">1000</span>)</button>
+            <button onclick="upgradeNetwork()">Upgrade Network ($<span id="network-upgrade-cost">750</span>)</button>
+            <button onclick="mineBitcoin()">Mine Bitcoin</button>
+            <button onclick="upgradeBankMiners()">Upgrade Bank Miners</button>
+            <button onclick="useBankMiners()">Use Bank Miners</button>
+            <button onclick="activateHackBooster()">Activate Hack Booster</button>
+            <button onclick="saveGame()">Save Game</button>
+        </div>
+
+        <div id="bank-hack" style="display:none;">
+            <h3>Enter the Code to Hack the Bank</h3>
+            <div id="current-input"></div>
+            <div id="numpad">
+                <button onclick="enterDigit('1')">1</button>
+                <button onclick="enterDigit('2')">2</button>
+                <button onclick="enterDigit('3')">3</button>
+                <button onclick="enterDigit('4')">4</button>
+                <button onclick="enterDigit('5')">5</button>
+                <button onclick="enterDigit('6')">6</button>
+                <button onclick="enterDigit('7')">7</button>
+                <button onclick="enterDigit('8')">8</button>
+                <button onclick="enterDigit('9')">9</button>
+                <button onclick="enterDigit('0')">0</button>
+                <button onclick="submitCode()">Submit</button>
+                <button onclick="clearCode()">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let balance = 0;
+        let serverRackCost = 500;
+        let ethernetCableCost = 50;
+        let serverUpgradeCost = 1000;
+        let networkUpgradeCost = 750;
+
+        function showMenu() {
+            document.getElementById('menu-container').style.display = 'block';
+        }
+
+        function startGame() {
+            document.getElementById('menu-container').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+        }
+
+        function showLoadGameMenu() {
+            document.getElementById('menu-container').style.display = 'none';
+            document.getElementById('load-game-container').style.display = 'block';
+            loadSaveSlots();
+        }
+
+        function goBackToMenu() {
+            document.getElementById('load-game-container').style.display = 'none';
+            document.getElementById('menu-container').style.display = 'block';
+        }
+
+        function showInstructions() {
+            alert('Instructions:\n1. Use the buttons to manage your servers and network.\n2. Hack the bank to increase your balance.\n3. Upgrade your equipment and earn more money.');
+        }
+
+        function loadSaveSlots() {
+            const saveSlots = document.getElementById('save-slots');
+            saveSlots.innerHTML = '';
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('save_')) {
+                    const slot = document.createElement('div');
+                    slot.className = 'save-slot';
+                    slot.innerHTML = `
+                        <p>${key}</p>
+                        <button onclick="loadGame('${key}')">Load</button>
+                        <button onclick="deleteSave('${key}')">Delete</button>
+                    `;
+                    saveSlots.appendChild(slot);
+                }
+            }
+        }
+
+        function loadGame(saveKey) {
+            const gameData = localStorage.getItem(saveKey);
+            if (gameData) {
+                const data = JSON.parse(gameData);
+                balance = parseFloat(data.balance);
+                document.getElementById('balance').textContent = balance.toFixed(2);
+                document.getElementById('server-racks').textContent = data.serverRacks;
+                document.getElementById('ethernet-cables').textContent = data.ethernetCables;
+                document.getElementById('server-upgrade-level').textContent = data.serverUpgradeLevel;
+                document.getElementById('network-upgrade-level').textContent = data.networkUpgradeLevel;
+
+                const activeUpgradesList = document.getElementById('active-upgrades-list');
+                activeUpgradesList.innerHTML = '';
+                data.activeUpgrades.forEach(upgrade => {
+                    const newUpgrade = document.createElement('li');
+                    newUpgrade.textContent = upgrade;
+                    activeUpgradesList.appendChild(newUpgrade);
+                });
+
+                alert('Loaded game: ' + saveKey);
+            }
+        }
+
+        function deleteSave(saveKey) {
+            localStorage.removeItem(saveKey);
+            loadSaveSlots();
+        }
+
+        function saveGame() {
+            const gameData = JSON.stringify({
+                balance: document.getElementById('balance').textContent,
+                serverRacks: document.getElementById('server-racks').textContent,
+                ethernetCables: document.getElementById('ethernet-cables').textContent,
+                serverUpgradeLevel: document.getElementById('server-upgrade-level').textContent,
+                networkUpgradeLevel: document.getElementById('network-upgrade-level').textContent,
+                activeUpgrades: Array.from(document.getElementById('active-upgrades-list').children).map(li => li.textContent),
+            });
+
+            const saveKey = `save_${new Date().toISOString()}`;
+            localStorage.setItem(saveKey, gameData);
+            alert('Game saved as ' + saveKey);
+        }
+
+        function hackBank() {
+            document.getElementById('bank-hack').style.display = 'block';
+        }
+
+        function enterDigit(digit) {
+            const currentInput = document.getElementById('current-input');
+            currentInput.textContent += digit;
+        }
+
+        function submitCode() {
+            const code = document.getElementById('current-input').textContent;
+            const success = Math.random() < 0.5; // 50% chance of success
+
+            if (success) {
+                const amountToAdd = Math.ceil((balance + 100) / 100) * 100; // Increment balance in $100
+                balance += amountToAdd;
+                document.getElementById('balance').textContent = balance.toFixed(2);
+
+                // Hide the num pad
+                document.getElementById('bank-hack').style.display = 'none';
+
+                alert('Bank hacked successfully! Added $' + amountToAdd + ' to balance.');
+            } else {
+                alert('Failed to hack the bank. Try again.');
+            }
+
+            clearCode();
+        }
+
+        function clearCode() {
+            document.getElementById('current-input').textContent = '';
+        }
+
+        function addActiveUpgrade(upgradeName) {
+            const activeUpgradesList = document.getElementById('active-upgrades-list');
+            const newUpgrade = document.createElement('li');
+            newUpgrade.textContent = upgradeName;
+            activeUpgradesList.appendChild(newUpgrade);
+        }
+
+        function buyServerRack() {
+            if (balance >= serverRackCost) {
+                balance -= serverRackCost;
+                document.getElementById('balance').textContent = balance.toFixed(2);
+                document.getElementById('server-racks').textContent = parseInt(document.getElementById('server-racks').textContent) + 1;
+                addActiveUpgrade('Server Rack');
+                serverRackCost *= 1.2; // Increase cost by 20%
+                document.getElementById('server-rack-cost').textContent = Math.round(serverRackCost);
+                alert('Server Rack purchased!');
+            } else {
+                alert('Not enough balance to buy Server Rack.');
+            }
+        }
+
+        function buyEthernetCable() {
+            if (balance >= ethernetCableCost) {
+                balance -= ethernetCableCost;
+                document.getElementById('balance').textContent = balance.toFixed(2);
+                document.getElementById('ethernet-cables').textContent = parseInt(document.getElementById('ethernet-cables').textContent) + 1;
+                addActiveUpgrade('Ethernet Cable');
+                ethernetCableCost *= 1.2; // Increase cost by 20%
+                document.getElementById('ethernet-cable-cost').textContent = Math.round(ethernetCableCost);
+                alert('Ethernet Cable purchased!');
+            } else {
+                alert('Not enough balance to buy Ethernet Cable.');
+            }
+        }
+
+        function upgradeServer() {
+            if (balance >= serverUpgradeCost) {
+                balance -= serverUpgradeCost;
+                document.getElementById('balance').textContent = balance.toFixed(2);
+                const serverUpgradeLevel = document.getElementById('server-upgrade-level');
+                serverUpgradeLevel.textContent = parseInt(serverUpgradeLevel.textContent) + 1;
+                addActiveUpgrade('Server Upgrade Level ' + serverUpgradeLevel.textContent);
+                serverUpgradeCost *= 1.2; // Increase cost by 20%
+                document.getElementById('server-upgrade-cost').textContent = Math.round(serverUpgradeCost);
+                alert('Server upgraded!');
+            } else {
+                alert('Not enough balance to upgrade Server.');
+            }
+        }
+
+        function upgradeNetwork() {
+            if (balance >= networkUpgradeCost) {
+                balance -= networkUpgradeCost;
+                document.getElementById('balance').textContent = balance.toFixed(2);
+                const networkUpgradeLevel = document.getElementById('network-upgrade-level');
+                networkUpgradeLevel.textContent = parseInt(networkUpgradeLevel.textContent) + 1;
+                addActiveUpgrade('Network Upgrade Level ' + networkUpgradeLevel.textContent);
+                networkUpgradeCost *= 1.2; // Increase cost by 20%
+                document.getElementById('network-upgrade-cost').textContent = Math.round(networkUpgradeCost);
+                alert('Network upgraded!');
+            } else {
+                alert('Not enough balance to upgrade Network.');
+            }
+        }
+
+        function mineBitcoin() {
+            addActiveUpgrade('Bitcoin Mining');
+            alert('Mining Bitcoin...');
+        }
+
+        function upgradeBankMiners() {
+            addActiveUpgrade('Bank Miners Upgrade');
+            alert('Bank Miners upgraded!');
+        }
+
+        function useBankMiners() {
+            addActiveUpgrade('Using Bank Miners');
+            alert('Using Bank Miners...');
+        }
+
+        function activateHackBooster() {
+            addActiveUpgrade('Hack Booster');
+            alert('Hack Booster activated!');
+        }
+
+        function showUpgradeDetails(upgradeType) {
+            const details = document.querySelectorAll('#upgrade-details .upgrade-details');
+            details.forEach(detail => detail.style.display = 'none');
+
+            const detailToShow = document.getElementById(`${upgradeType}-details`);
+            if (detailToShow) {
+                detailToShow.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
