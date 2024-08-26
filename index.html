@@ -17,6 +17,8 @@
             height: 100vh;
         }
 
+        
+
         #menu-container, #game-container, #load-game-container {
             background-color: #3c3f47;
             border-radius: 8px;
@@ -140,9 +142,27 @@
             max-height: 200px;
             overflow-y: auto;
         }
+
+        /* New Update Text Styling */
+        #new-update {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #ffad33;
+            color: #ffffff;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
     </style>
 </head>
 <body onload="showMenu()">
+    <!-- New Update Text -->
+    <div id="new-update">New Update</div>
+
     <!-- Main Menu -->
     <div id="menu-container">
         <h1>Main Menu</h1>
@@ -167,6 +187,7 @@
             <p>Ethernet Cables: <span id="ethernet-cables">0</span></p>
             <p>Server Upgrade Level: <span id="server-upgrade-level">1</span></p>
             <p>Network Upgrade Level: <span id="network-upgrade-level">0</span></p>
+            <p>Bank Hackers Upgrade: <span id="bank-hackers-upgrade">0</span></p>
         </div>
 
         <!-- Menu Bar -->
@@ -228,10 +249,11 @@
 
     <script>
         let balance = 0;
-        let serverRackCost = 500;
-        let ethernetCableCost = 50;
-        let serverUpgradeCost = 1000;
-        let networkUpgradeCost = 750;
+        let serverRackCost = 500; // Starting cost
+        let ethernetCableCost = 50; // Starting cost
+        let serverUpgradeCost = 1000; // Starting cost
+        let networkUpgradeCost = 750; // Starting cost
+        let bankHackersUpgrade = 0; // Initial bank hackers upgrade level
 
         function showMenu() {
             document.getElementById('menu-container').style.display = 'block';
@@ -286,6 +308,7 @@
                 document.getElementById('ethernet-cables').textContent = data.ethernetCables;
                 document.getElementById('server-upgrade-level').textContent = data.serverUpgradeLevel;
                 document.getElementById('network-upgrade-level').textContent = data.networkUpgradeLevel;
+                document.getElementById('bank-hackers-upgrade').textContent = data.bankHackersUpgrade;
 
                 const activeUpgradesList = document.getElementById('active-upgrades-list');
                 activeUpgradesList.innerHTML = '';
@@ -311,6 +334,7 @@
                 ethernetCables: document.getElementById('ethernet-cables').textContent,
                 serverUpgradeLevel: document.getElementById('server-upgrade-level').textContent,
                 networkUpgradeLevel: document.getElementById('network-upgrade-level').textContent,
+                bankHackersUpgrade: document.getElementById('bank-hackers-upgrade').textContent,
                 activeUpgrades: Array.from(document.getElementById('active-upgrades-list').children).map(li => li.textContent),
             });
 
@@ -330,10 +354,10 @@
 
         function submitCode() {
             const code = document.getElementById('current-input').textContent;
-            const success = Math.random() < 0.5; // 50% chance of success
+            const success = Math.random() < 0.3; // 30% chance of success
 
             if (success) {
-                const amountToAdd = Math.ceil((balance + 100) / 100) * 100; // Increment balance in $100
+                const amountToAdd = Math.min(100, Math.ceil((balance + 100) / 100) * 100); // Max $100
                 balance += amountToAdd;
                 document.getElementById('balance').textContent = balance.toFixed(2);
 
@@ -396,6 +420,12 @@
                 addActiveUpgrade('Server Upgrade Level ' + serverUpgradeLevel.textContent);
                 serverUpgradeCost *= 1.2; // Increase cost by 20%
                 document.getElementById('server-upgrade-cost').textContent = Math.round(serverUpgradeCost);
+
+                // Enable bank hackers upgrade option if server level is 20
+                if (parseInt(serverUpgradeLevel.textContent) === 20) {
+                    alert('Server Level 20 reached! Bank Hackers Upgrade available!');
+                    document.getElementById('bank-hackers-upgrade').textContent = bankHackersUpgrade;
+                }
                 alert('Server upgraded!');
             } else {
                 alert('Not enough balance to upgrade Server.');
@@ -419,7 +449,7 @@
 
         function mineBitcoin() {
             addActiveUpgrade('Bitcoin Mining');
-            alert('Mining Bitcoin...');
+            alert('Mining Bitcoin... It takes a while to see results.');
         }
 
         function upgradeBankMiners() {
@@ -429,7 +459,7 @@
 
         function useBankMiners() {
             addActiveUpgrade('Using Bank Miners');
-            alert('Using Bank Miners...');
+            alert('Using Bank Miners... Expect slow returns.');
         }
 
         function activateHackBooster() {
